@@ -1,101 +1,97 @@
-import Image from "next/image";
+'use client'
+
+import { useState } from 'react'
+import Image from 'next/image'
+
+const styles = {
+  'anime': 'In the style of anime, vibrant colors, detailed backgrounds',
+  'realistic': 'Photorealistic, highly detailed, natural lighting',
+  'abstract': 'Abstract art style, bold colors, geometric shapes',
+  'fantasy': 'Fantasy art style, magical atmosphere, ethereal lighting',
+  'sci-fi': 'Science fiction style, futuristic elements, high-tech environment'
+}
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [prompt, setPrompt] = useState('')
+  const [style, setStyle] = useState('anime')
+  const [image, setImage] = useState('')
+  const [loading, setLoading] = useState(false)
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const generateWallpaper = async () => {
+    setLoading(true)
+    const response = await fetch('/api/wallpaper', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        prompt: `${prompt}, ${styles[style as keyof typeof styles]}`,
+      }),
+    })
+
+    if (response.ok) {
+      const blob = await response.blob()
+      setImage(URL.createObjectURL(blob))
+    } else {
+      console.error('Failed to generate wallpaper')
+    }
+    setLoading(false)
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-100 py-6 flex flex-col justify-center sm:py-12">
+      <div className="relative py-3 sm:max-w-xl sm:mx-auto">
+        <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-light-blue-500 shadow-lg transform -skew-y-6 sm:skew-y-0 sm:-rotate-6 sm:rounded-3xl"></div>
+        <div className="relative px-4 py-10 bg-white shadow-lg sm:rounded-3xl sm:p-20">
+          <div className="max-w-md mx-auto">
+            <div>
+              <h1 className="text-2xl font-semibold">AI Wallpaper Generator</h1>
+            </div>
+            <div className="divide-y divide-gray-200">
+              <div className="py-8 text-base leading-6 space-y-4 text-gray-700 sm:text-lg sm:leading-7">
+                <div className="flex flex-col">
+                  <label className="leading-loose">Prompt</label>
+                  <input
+                    type="text"
+                    className="px-4 py-2 border focus:ring-gray-500 focus:border-gray-900 w-full sm:text-sm border-gray-300 rounded-md focus:outline-none text-gray-600"
+                    placeholder="Describe your wallpaper"
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label className="leading-loose">Style</label>
+                  <select
+                    className="px-4 py-2 border focus:ring-gray-500 focus:border-gray-900 w-full sm:text-sm border-gray-300 rounded-md focus:outline-none text-gray-600"
+                    value={style}
+                    onChange={(e) => setStyle(e.target.value)}
+                  >
+                    {Object.keys(styles).map((s) => (
+                      <option key={s} value={s}>
+                        {s.charAt(0).toUpperCase() + s.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="pt-4 flex items-center space-x-4">
+                  <button
+                    className="bg-blue-500 flex justify-center items-center w-full text-white px-4 py-3 rounded-md focus:outline-none"
+                    onClick={generateWallpaper}
+                    disabled={loading}
+                  >
+                    {loading ? 'Generating...' : 'Generate Wallpaper'}
+                  </button>
+                </div>
+              </div>
+            </div>
+            {image && (
+              <div className="mt-8">
+                <Image src={image} alt="Generated Wallpaper" width={400} height={400} />
+              </div>
+            )}
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
     </div>
-  );
+  )
 }
